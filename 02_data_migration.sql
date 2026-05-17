@@ -1,0 +1,27 @@
+-- =============================================
+-- 02_data_migration.sql
+-- Oracle to Snowflake Data Migration Simulation
+-- =============================================
+
+USE DATABASE CORPORATE_BANKING_DB;
+USE SCHEMA CORE;
+
+-- Insert Sample Customers (from Oracle)
+INSERT INTO CUSTOMERS (CUSTOMER_ID, CUSTOMER_NAME, ACCOUNT_NUMBER, ACCOUNT_TYPE, BALANCE, OPEN_DATE, STATUS, KYC_STATUS)
+VALUES 
+(1001, 'TechCorp Solutions', 'ACC1001', 'CURRENT', 1250000.50, '2022-01-15', 'ACTIVE', 'APPROVED'),
+(1002, 'Global Traders Inc', 'ACC1002', 'SAVINGS', 450000.75, '2021-11-20', 'ACTIVE', 'APPROVED');
+
+-- Simulate Bulk Load - 50K transactions
+INSERT INTO TRANSACTIONS (TXN_DATE, CUSTOMER_ID, ACCOUNT_NUMBER, TXN_TYPE, AMOUNT, DESCRIPTION)
+SELECT 
+    DATEADD(DAY, -UNIFORM(1, 30, RANDOM()), CURRENT_TIMESTAMP()),
+    1001,
+    'ACC1001',
+    CASE WHEN UNIFORM(0,1,RANDOM()) = 0 THEN 'CREDIT' ELSE 'DEBIT' END,
+    UNIFORM(1000, 50000, RANDOM())::NUMBER(15,2),
+    'Corporate Vendor Payment'
+FROM TABLE(GENERATOR(ROWCOUNT => 50000));
+
+-- Data Validation
+SELECT COUNT(*) as TOTAL_TRANSACTIONS, SUM(AMOUNT) as TOTAL_AMOUNT FROM TRANSACTIONS;
